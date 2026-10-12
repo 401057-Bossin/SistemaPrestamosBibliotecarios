@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo y Disponibilidad - BiblioRed{% endblock %}
+
+{% block content %}
+<!-- Consulta de Disponibilidad -->
+<div class="card shadow-sm mb-4 border-primary">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-search me-2"></i>Consultar Disponibilidad de Catálogo</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('catalogo') }}" method="GET" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold">Seleccionar Título / Libro</label>
+                <select name="isbn" class="form-select">
+                    <option value="">-- Todos los libros o buscar uno específico --</option>
+                    {% for l in libros %}
+                    <option value="{{ l.isbn }}" {% if isbn_seleccionado == l.isbn %}selected{% endif %}>
+                        {{ l.titulo }} ({{ l.autor }}) - ISBN: {{ l.isbn }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold">Filtrar por Sede</label>
+                <select name="id_sede" class="form-select">
+                    <option value="">-- Todas las Sedes --</option>
+                    {% for s in sedes %}
+                    <option value="{{ s.id_sede }}" {% if sede_seleccionada == s.id_sede %}selected{% endif %}>
+                        {{ s.nombre }} {% if not s.activa %}(Inactiva){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="bi bi-search me-1"></i> Consultar
+                </button>
+                <a href="{{ url_for('catalogo') }}" class="btn btn-outline-secondary">Limpiar</a>
+            </div>
+        </form>
+
+        {% if consulta_realizada %}
+        <div class="mt-4 pt-3 border-top">
+            <h6 class="fw-bold text-dark">
+                Resultados de Disponibilidad: 
+                <span class="badge bg-success">{{ resultados_disponibilidad|length }} ejemplares disponibles</span>
+            </h6>
+            <div class="table-responsive mt-2">
+                <table class="table table-bordered table-sm mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ejemplar ID</th>
+                            <th>Título</th>
+                            <th>Ubicación Actual (Sede)</th>
+                            <th>Estado Físico</th>
+                            <th>Disponibilidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ej in resultados_disponibilidad %}
+                        <tr>
+                            <td class="fw-bold">{{ ej.id_ejemplar }}</td>
+                            <td>{{ ej.libro.titulo }}</td>
+                            <td><i class="bi bi-building me-1 text-primary"></i> {{ ej.sede.nombre }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ ej.estado.value }}</span></td>
+                            <td>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                    {{ ej.estado_ejemplar.value }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-3 text-muted">
+                                <i class="bi bi-info-circle me-1"></i> No se encontraron ejemplares disponibles para el criterio seleccionado.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Formularios para agregar Libro y Ejemplar -->
+    <div class="col-lg-4">
+        <!-- Formulario Libro -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-book text-primary me-2"></i>Nuevo Título</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('nuevo_libro') }}" method="POST">
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">ISBN <span class="badge bg-secondary-subtle text-muted fw-normal">Opcional / Auto</span></label>
+                        <input type="text" name="isbn" class="form-control form-control-sm" placeholder="Autogenerado si se omite">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Título</label>
+                        <input type="text" name="titulo" class="form-control form-control-sm" placeholder="Clean Architecture" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Autor</label>
+                        <input type="text" name="autor" class="form-control form-control-sm" placeholder="Robert C. Martin" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Categoría</label>
+                            <input type="text" name="categoria" class="form-control form-control-sm" placeholder="Software" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Editorial</label>
+                            <input type="text" name="editorial" class="form-control form-control-sm" placeholder="Prentice Hall" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-plus-circle me-1"></i> Agregar al Catálogo
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Formulario Ejemplar Físico -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-upc-scan text-success me-2"></i>Nuevo Ejemplar Físico</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('nuevo_ejemplar') }}" method="POST">
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">ID Ejemplar <span class="badge bg-secondary-subtle text-muted fw-normal">Automático</span></label>
+                        <input type="text" name="id_ejemplar" class="form-control form-control-sm" placeholder="Autogenerado (opcional)">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Libro</label>
+                        <select name="isbn" class="form-select form-select-sm" required>
+                            {% for l in libros %}
+                            <option value="{{ l.isbn }}">{{ l.titulo }} ({{ l.isbn }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Sede Radicación Inicial</label>
+                        <select name="id_sede" class="form-select form-select-sm" required>
+                            {% for s in sedes %}
+                            {% if s.activa %}
+                            <option value="{{ s.id_sede }}">{{ s.nombre }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-outline-success btn-sm w-100">
+                        <i class="bi bi-plus-circle me-1"></i> Asignar Ejemplar a Sede
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Libros y Ejemplares -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-collection text-primary me-2"></i>Inventario General de Ejemplares</h5>
+                <span class="badge bg-secondary">{{ ejemplares|length }} ejemplares físicos</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ejemplar</th>
+                                <th>Título y Autor</th>
+                                <th>Sede Asignada</th>
+                                <th>Estado Préstamo</th>
+                                <th>Condición Física</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for e in ejemplares %}
+                            <tr>
+                                <td class="fw-bold text-dark">{{ e.id_ejemplar }}</td>
+                                <td>
+                                    <div class="fw-semibold text-dark">{{ e.libro.titulo }}</div>
+                                    <div class="text-muted small">{{ e.libro.autor }} | ISBN: {{ e.libro.isbn }}</div>
+                                </td>
+                                <td>
+                                    <span class="fw-medium text-primary"><i class="bi bi-building me-1"></i>{{ e.sede.nombre }}</span>
+                                </td>
+                                <td>
+                                    {% if e.estado_ejemplar.name == 'DISPONIBLE' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">{{ e.estado_ejemplar.value }}</span>
+                                    {% elif e.estado_ejemplar.name == 'PRESTADO' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">{{ e.estado_ejemplar.value }}</span>
+                                    {% elif e.estado_ejemplar.name == 'EN_TRANSITO' %}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">{{ e.estado_ejemplar.value }}</span>
+                                    {% else %}
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle">{{ e.estado_ejemplar.value }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-secondary border">{{ e.estado.value }}</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">No hay ejemplares registrados.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

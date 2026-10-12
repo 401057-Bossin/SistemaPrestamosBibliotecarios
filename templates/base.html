@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BiblioRed - Préstamos Interbibliotecarios{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --bg-light: #f8fafc;
+        }
+        body {
+            background-color: var(--bg-light);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .card {
+            border: none;
+            border-radius: 0.85rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .card-stat {
+            border-left: 4px solid var(--accent-color);
+        }
+        .table-responsive {
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        .badge {
+            font-weight: 500;
+            padding: 0.45em 0.75em;
+        }
+        .footer {
+            margin-top: auto;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm" style="background-color: #0f172a !important;">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
+                <i class="bi bi-book-half text-primary fs-4"></i>
+                <span>BiblioRed <span class="badge bg-primary text-white fs-6">DAO</span></span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'index' %}active text-white fw-bold{% endif %}" href="{{ url_for('index') }}">
+                            <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'sedes' %}active text-white fw-bold{% endif %}" href="{{ url_for('sedes') }}">
+                            <i class="bi bi-building me-1"></i> Sedes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'socios' %}active text-white fw-bold{% endif %}" href="{{ url_for('socios') }}">
+                            <i class="bi bi-people me-1"></i> Socios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'catalogo' %}active text-white fw-bold{% endif %}" href="{{ url_for('catalogo') }}">
+                            <i class="bi bi-journal-text me-1"></i> Catálogo
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'prestamos' %}active text-white fw-bold{% endif %}" href="{{ url_for('prestamos') }}">
+                            <i class="bi bi-arrow-left-right me-1"></i> Préstamos & Reservas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'remitos' %}active text-white fw-bold{% endif %}" href="{{ url_for('remitos') }}">
+                            <i class="bi bi-truck me-1"></i> Remitos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'reportes' %}active text-white fw-bold{% endif %}" href="{{ url_for('reportes') }}">
+                            <i class="bi bi-bar-chart-fill me-1"></i> Reportes
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center text-light small">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle me-2">
+                        <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> Sistema Operativo
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="container-fluid px-4 py-4">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="row">
+                    <div class="col-12">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                                {% if category == 'success' %}
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                {% elif category == 'danger' %}
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                                {% else %}
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                {% endif %}
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer py-3 text-center text-muted small">
+        <div class="container-fluid px-4">
+            <span>Sistema de Préstamos Interbibliotecarios &copy; 2026 - Desarrollo de Aplicaciones con Objetos</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

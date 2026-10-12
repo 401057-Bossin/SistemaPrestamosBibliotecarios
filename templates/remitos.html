@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Logística y Remitos - BiblioRed{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Trazabilidad de Remitos Logísticos</h2>
+        <p class="text-muted mb-0">Implementación estricta del <strong>Patrón State</strong> (Creado &rarr; Empaquetado &rarr; Despachado &rarr; Recibido).</p>
+    </div>
+    <span class="badge bg-primary fs-6 px-3 py-2">
+        <i class="bi bi-diagram-3-fill me-1"></i> Patrón State Activo
+    </span>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-truck text-primary me-2"></i>Remitos de Traslado Interbibliotecario</h5>
+        <span class="badge bg-secondary">{{ remitos|length }} Remitos</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Remito ID</th>
+                        <th>Ejemplar / Libro</th>
+                        <th>Trayecto</th>
+                        <th>Estado Logístico Actual</th>
+                        <th>Acciones de Avance de Estado</th>
+                        <th>Trazabilidad (Historial)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in remitos %}
+                    {% set estado_str = r.estado_actual.__class__.__name__ %}
+                    <tr>
+                        <td class="fw-bold text-dark">{{ r.id_remito }}</td>
+                        <td>
+                            <div class="fw-semibold">{{ r.ejemplar.libro.titulo }}</div>
+                            <span class="badge bg-light text-secondary border">Ejemplar: {{ r.ejemplar.id_ejemplar }}</span>
+                        </td>
+                        <td>
+                            <div class="small fw-medium">{{ r.sede_origen.nombre }} &rarr; {{ r.sede_destino.nombre }}</div>
+                        </td>
+                        <td>
+                            {% if estado_str == 'Creado' %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fs-6">
+                                    <i class="bi bi-file-earmark-plus me-1"></i> Creado
+                                </span>
+                            {% elif estado_str == 'Empaquetado' %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fs-6">
+                                    <i class="bi bi-box-seam me-1"></i> Empaquetado
+                                </span>
+                            {% elif estado_str == 'Despachado' %}
+                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle fs-6">
+                                    <i class="bi bi-truck me-1"></i> Despachado (En Tránsito)
+                                </span>
+                            {% elif estado_str == 'Recibido' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">
+                                    <i class="bi bi-check-all me-1"></i> Recibido en Destino
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <!-- Botón Empaquetar -->
+                                <form action="{{ url_for('empaquetar', id_remito=r.id_remito) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-warning" {% if estado_str != 'Creado' %}disabled title="Solo disponible si está Creado"{% endif %}>
+                                        <i class="bi bi-box-seam"></i> Empaquetar
+                                    </button>
+                                </form>
+
+                                <!-- Botón Despachar -->
+                                <form action="{{ url_for('despachar', id_remito=r.id_remito) }}" method="POST" class="d-inline ms-1">
+                                    <button type="submit" class="btn btn-outline-info" {% if estado_str != 'Empaquetado' %}disabled title="Solo disponible si está Empaquetado"{% endif %}>
+                                        <i class="bi bi-send"></i> Despachar
+                                    </button>
+                                </form>
+
+                                <!-- Botón Recibir -->
+                                <form action="{{ url_for('recibir', id_remito=r.id_remito) }}" method="POST" class="d-inline ms-1">
+                                    <button type="submit" class="btn btn-outline-success" {% if estado_str != 'Despachado' %}disabled title="Solo disponible si está Despachado"{% endif %}>
+                                        <i class="bi bi-check2-circle"></i> Recibir
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalTrazabilidad{{ r.id_remito }}">
+                                <i class="bi bi-clock-history me-1"></i> Ver Eventos ({{ r.historial_trazabilidad|length }})
+                            </button>
+
+                            <!-- Modal Trazabilidad -->
+                            <div class="modal fade" id="modalTrazabilidad{{ r.id_remito }}" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h6 class="modal-title fw-bold">Historial de Trazabilidad: {{ r.id_remito }}</h6>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="timeline">
+                                                <ul class="list-group list-group-flush">
+                                                    {% for h in r.historial_trazabilidad %}
+                                                    <li class="list-group-item d-flex justify-content-between align-items-start px-0 py-2">
+                                                        <div class="ms-2 me-auto">
+                                                            <div class="fw-bold">{{ h.estado }} - {{ h.observacion }}</div>
+                                                            <span class="text-muted small">{{ h.fecha_hora.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                                                        </div>
+                                                        <span class="badge bg-primary-subtle text-primary rounded-pill"><i class="bi bi-check"></i></span>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No hay remitos generados en el sistema.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

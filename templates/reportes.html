@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes Obligatorios - BiblioRed{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Módulo de Reportes de Gestión</h2>
+        <p class="text-muted mb-0">Los 4 reportes no triviales requeridos por la consigna del trabajo integrador.</p>
+    </div>
+    <span class="badge bg-dark fs-6 px-3 py-2">
+        <i class="bi bi-file-earmark-bar-graph me-1"></i> Auditoría y Métricas
+    </span>
+</div>
+
+<div class="row g-4">
+    <!-- Reporte 1: Préstamos Activos y Material en Tránsito -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100 border-top border-4 border-primary">
+            <div class="card-header bg-white py-3 border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-activity text-primary me-2"></i>Reporte 1: Préstamos Activos y En Tránsito</h5>
+                    <span class="badge bg-primary">{{ rep1.total_prestamos_activos }} Activos</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold text-muted small text-uppercase">Préstamos en curso:</h6>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Socio</th>
+                                <th>Ejemplar</th>
+                                <th>Vence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in rep1.prestamos_activos %}
+                            <tr>
+                                <td class="fw-bold">{{ p.id_prestamo }}</td>
+                                <td>{{ p.socio.nombre }} {{ p.socio.apellido }}</td>
+                                <td>{{ p.ejemplar.libro.titulo }}</td>
+                                <td>{{ p.fecha_vencimiento }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted">Sin préstamos activos.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="fw-bold text-muted small text-uppercase">Material físico actualmente en tránsito: <span class="badge bg-warning text-dark">{{ rep1.total_en_transito }}</span></h6>
+                <ul class="list-group list-group-flush small">
+                    {% for ej in rep1.ejemplares_en_transito %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><strong>{{ ej.id_ejemplar }}</strong> - {{ ej.libro.titulo }}</span>
+                        <span class="badge bg-warning text-dark">En tránsito</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted px-0">No hay material en tránsito actualmente.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte 2: Préstamos Vencidos y Días de Mora -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100 border-top border-4 border-danger">
+            <div class="card-header bg-white py-3 border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-calendar-x text-danger me-2"></i>Reporte 2: Préstamos Vencidos y Mora</h5>
+                    <span class="badge bg-danger">{{ rep2.total_vencidos }} Vencidos</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">Calculado a la fecha de corte actual ({{ hoy }}).</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Préstamo</th>
+                                <th>Socio</th>
+                                <th>Fecha Vencimiento</th>
+                                <th>Días de Mora</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in rep2.detalle %}
+                            <tr class="table-danger">
+                                <td class="fw-bold">{{ item.prestamo.id_prestamo }}</td>
+                                <td>{{ item.prestamo.socio.nombre }} {{ item.prestamo.socio.apellido }}</td>
+                                <td>{{ item.prestamo.fecha_vencimiento }}</td>
+                                <td><span class="badge bg-danger">{{ item.dias_retraso }} días</span></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-3 text-muted">
+                                    <i class="bi bi-check-circle text-success me-1"></i> No se registran préstamos vencidos impagos.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte 3: Disponibilidad de Catálogo por Sede -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100 border-top border-4 border-success">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-pie-chart text-success me-2"></i>Reporte 3: Disponibilidad de Catálogo por Sede</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sede</th>
+                                <th>Total Ejemplares</th>
+                                <th>Disponibles</th>
+                                <th>Prestados / Tránsito</th>
+                                <th>Estado Sede</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for nombre_sede, datos in rep3.items() %}
+                            <tr>
+                                <td class="fw-bold">{{ nombre_sede }}</td>
+                                <td>{{ datos.total_ejemplares }}</td>
+                                <td><span class="badge bg-success">{{ datos.disponibles }}</span></td>
+                                <td><span class="badge bg-secondary">{{ datos.no_disponibles }}</span></td>
+                                <td>
+                                    {% if datos.activa %}
+                                        <span class="text-success small fw-medium">Activa</span>
+                                    {% else %}
+                                        <span class="text-danger small fw-medium">Inactiva</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte 4: Libros Más Solicitados para Préstamos Inter-Sedes -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100 border-top border-4 border-warning">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-trophy text-warning me-2"></i>Reporte 4: Ranking Préstamos Inter-Sedes</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">Títulos con mayor demanda logística entre sedes diferentes.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th># Ranking</th>
+                                <th>Título del Libro</th>
+                                <th>Solicitudes Inter-Sedes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in rep4 %}
+                            <tr>
+                                <td class="fw-bold">#{{ loop.index }}</td>
+                                <td class="fw-semibold">{{ item.libro }}</td>
+                                <td>
+                                    <span class="badge bg-warning text-dark fs-6">{{ item.solicitudes_intersede }} envíos</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-3 text-muted">
+                                    No hay solicitudes interbibliotecarias registradas aún.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

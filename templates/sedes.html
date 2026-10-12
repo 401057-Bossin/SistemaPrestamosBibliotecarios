@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Administración de Sedes - BiblioRed{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-building-add text-primary me-2"></i>Registrar Sede</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('sedes') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">ID Sede <span class="badge bg-secondary-subtle text-muted fw-normal">Automático</span></label>
+                        <input type="text" name="id_sede" class="form-control" placeholder="Autogenerado (opcional)">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Nombre de la Sede</label>
+                        <input type="text" name="nombre" class="form-control" placeholder="Ej: Sede Belgrano" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Dirección</label>
+                        <input type="text" name="direccion" class="form-control" placeholder="Ej: Juramento 2100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Contacto (Tel / Email)</label>
+                        <input type="text" name="contacto" class="form-control" placeholder="Ej: 4781-0000 / sede@red.org" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Horarios de Atención</label>
+                        <input type="text" name="horarios" class="form-control" placeholder="Ej: Lun a Vie 9:00 a 19:00" required>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="activa" id="activaSwitch" checked>
+                        <label class="form-check-label small" for="activaSwitch">Sede Activa para Operaciones</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-save me-1"></i> Guardar Sede
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-building text-primary me-2"></i>Red de Sedes Bibliotecarias</h5>
+                <span class="badge bg-secondary">{{ sedes|length }} Sedes</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Dirección & Contacto</th>
+                                <th>Horarios</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in sedes %}
+                            <tr class="{% if not s.activa %}table-secondary text-muted{% endif %}">
+                                <td class="fw-bold">{{ s.id_sede }}</td>
+                                <td class="fw-medium text-dark">{{ s.nombre }}</td>
+                                <td>
+                                    <div class="small">{{ s.direccion }}</div>
+                                    <div class="small text-muted">{{ s.contacto }}</div>
+                                </td>
+                                <td class="small">{{ s.horarios }}</td>
+                                <td>
+                                    {% if s.activa %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-check-circle me-1"></i> Activa
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                            <i class="bi bi-x-circle me-1"></i> Dada de Baja
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('toggle_sede', id_sede=s.id_sede) }}" method="POST" class="d-inline">
+                                        {% if s.activa %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Dar de baja">
+                                                <i class="bi bi-slash-circle"></i> Inhabilitar
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Reactivar">
+                                                <i class="bi bi-check2-circle"></i> Activar
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No hay sedes registradas.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}Préstamos y Reservas - BiblioRed{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- Formulario para Nuevo Préstamo -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-top border-4 border-primary">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-arrow-left-right text-primary me-2"></i>Registrar Solicitud de Préstamo</h5>
+                <small class="text-muted">Préstamo local o interbibliotecario (genera remito si origen != destino)</small>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('prestamos') }}" method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">ID Préstamo <span class="badge bg-secondary-subtle text-muted fw-normal">Automático</span></label>
+                            <input type="text" name="id_prestamo" class="form-control" placeholder="Autogenerado (opcional)">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label small fw-semibold">Socio Solicitante</label>
+                            <select name="id_socio" class="form-select" required>
+                                <option value="">-- Seleccionar Socio --</option>
+                                {% for s in socios %}
+                                <option value="{{ s.id_socio }}">
+                                    {{ s.nombre }} {{ s.apellido }} (DNI: {{ s.dni }}) {% if not s.esta_habilitado(hoy) %}[INHABILITADO]{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-semibold">Ejemplar Físico a Prestar</label>
+                            <select name="id_ejemplar" class="form-select" required>
+                                <option value="">-- Seleccionar Ejemplar Disponible --</option>
+                                {% for e in ejemplares %}
+                                <option value="{{ e.id_ejemplar }}">
+                                    [{{ e.id_ejemplar }}] {{ e.libro.titulo }} (Ubicación: {{ e.sede.nombre }}) - Estado: {{ e.estado_ejemplar.value }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Sede de Origen (donde está el libro)</label>
+                            <select name="id_sede_origen" class="form-select" required>
+                                <option value="">-- Sede Origen --</option>
+                                {% for s in sedes %}
+                                <option value="{{ s.id_sede }}">{{ s.nombre }} {% if not s.activa %}(Inactiva){% endif %}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Sede de Destino (retiro del socio)</label>
+                            <select name="id_sede_destino" class="form-select">
+                                <option value="">-- Misma que Origen (Préstamo Local) --</option>
+                                {% for s in sedes %}
+                                <option value="{{ s.id_sede }}">{{ s.nombre }} {% if not s.activa %}(Inactiva){% endif %}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Plazo del Préstamo (días)</label>
+                            <input type="number" name="dias_prestamo" class="form-control" value="14" min="1" max="60">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-check-circle me-1"></i> Confirmar Préstamo
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario para Registrar Reserva -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-top border-4 border-warning">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-bookmark-plus text-warning me-2"></i>Gestionar Reserva de Libro</h5>
+                <small class="text-muted">Reserva anticipada por título para un socio</small>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('crear_reserva') }}" method="POST">
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">ID Reserva <span class="badge bg-secondary-subtle text-muted fw-normal">Automático</span></label>
+                        <input type="text" name="id_reserva" class="form-control form-control-sm" placeholder="Autogenerado (opcional)">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Socio</label>
+                        <select name="id_socio" class="form-select form-select-sm" required>
+                            <option value="">-- Seleccionar Socio --</option>
+                            {% for s in socios %}
+                            <option value="{{ s.id_socio }}">{{ s.nombre }} {{ s.apellido }} ({{ s.dni }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Título de Libro (ISBN)</label>
+                        <select name="isbn" class="form-select form-select-sm" required>
+                            <option value="">-- Seleccionar Libro --</option>
+                            {% for l in libros %}
+                            <option value="{{ l.isbn }}">{{ l.titulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Sede donde retirará</label>
+                        <select name="id_sede" class="form-select form-select-sm" required>
+                            <option value="">-- Seleccionar Sede --</option>
+                            {% for s in sedes %}
+                            {% if s.activa %}
+                            <option value="{{ s.id_sede }}">{{ s.nombre }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-warning text-dark fw-medium btn-sm w-100">
+                        <i class="bi bi-bookmark-check me-1"></i> Registrar Reserva
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Listado de Préstamos Registrados -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-0">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history text-primary me-2"></i>Historial y Estado de Préstamos</h5>
+        <span class="badge bg-secondary">{{ prestamos|length }} Préstamos</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Socio</th>
+                        <th>Ejemplar y Libro</th>
+                        <th>Trayecto Sedes</th>
+                        <th>Inicio / Vencimiento</th>
+                        <th>Devolución</th>
+                        <th>Acción de Devolución</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in prestamos %}
+                    <tr>
+                        <td class="fw-bold">{{ p.id_prestamo }}</td>
+                        <td>
+                            <div class="fw-semibold">{{ p.socio.nombre }} {{ p.socio.apellido }}</div>
+                            <div class="text-muted small">DNI: {{ p.socio.dni }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-medium text-dark">{{ p.ejemplar.libro.titulo }}</div>
+                            <span class="badge bg-light text-dark border">{{ p.ejemplar.id_ejemplar }}</span>
+                        </td>
+                        <td>
+                            {% if p.es_interbibliotecario %}
+                                <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
+                                    {{ p.sede_origen.nombre }} &rarr; {{ p.sede_destino.nombre }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border">
+                                    Local ({{ p.sede_origen.nombre }})
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="small">Inicio: {{ p.fecha_inicio }}</div>
+                            <div class="small fw-semibold {% if p.esta_vencido() %}text-danger{% else %}text-muted{% endif %}">
+                                Vence: {{ p.fecha_vencimiento }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if p.fecha_devolucion %}
+                                <span class="badge bg-success"><i class="bi bi-check2"></i> Devuelto ({{ p.fecha_devolucion }})</span>
+                                <div class="small text-muted">Estado: {{ p.estado_devuelto.value }}</div>
+                            {% elif p.esta_vencido() %}
+                                <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Vencido</span>
+                            {% else %}
+                                <span class="badge bg-primary">En curso</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not p.fecha_devolucion %}
+                            <!-- Botón modal para registrar devolución -->
+                            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalDevolucion{{ p.id_prestamo }}">
+                                <i class="bi bi-box-arrow-in-down me-1"></i> Devolver
+                            </button>
+
+                            <!-- Modal Devolución -->
+                            <div class="modal fade" id="modalDevolucion{{ p.id_prestamo }}" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <form action="{{ url_for('devolucion', id_prestamo=p.id_prestamo) }}" method="POST">
+                                            <div class="modal-header">
+                                                <h6 class="modal-title fw-bold">Registrar Devolución - {{ p.id_prestamo }}</h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p class="small text-muted mb-3">
+                                                    Ejemplar: <strong>{{ p.ejemplar.libro.titulo }}</strong> ({{ p.ejemplar.id_ejemplar }})<br>
+                                                    Socio: <strong>{{ p.socio.nombre }} {{ p.socio.apellido }}</strong>
+                                                </p>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Fecha de Devolución Física</label>
+                                                    <input type="date" name="fecha_devolucion" class="form-control" value="{{ hoy }}" required>
+                                                    <div class="form-text small">Si excede la fecha de vencimiento ({{ p.fecha_vencimiento }}), el socio será penalizado automáticamente.</div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Estado Físico del Material</label>
+                                                    <select name="estado_fisico" class="form-select" required>
+                                                        {% for est in estados_fisicos %}
+                                                        <option value="{{ est.name }}">{{ est.value }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-success btn-sm">Confirmar Recepción</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                                <span class="text-muted small">&mdash;</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No se registraron préstamos aún.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Listado de Reservas -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-0">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-bookmarks text-warning me-2"></i>Reservas Solicitadas</h5>
+        <span class="badge bg-secondary">{{ reservas|length }} Reservas</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID Reserva</th>
+                        <th>Socio</th>
+                        <th>Libro Solicitado</th>
+                        <th>Sede de Retiro</th>
+                        <th>Fecha Solicitud</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reservas %}
+                    <tr>
+                        <td class="fw-bold">{{ r.id_reserva }}</td>
+                        <td>{{ r.socio.nombre }} {{ r.socio.apellido }}</td>
+                        <td class="fw-medium">{{ r.libro.titulo }}</td>
+                        <td>{{ r.sede.nombre }}</td>
+                        <td class="small">{{ r.fecha_solicitud }}</td>
+                        <td>
+                            {% if r.activa %}
+                                <span class="badge bg-warning-subtle text-dark border border-warning-subtle">Activa</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-muted border">Cancelada / Inactiva</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if r.activa %}
+                            <form action="{{ url_for('cancelar_reserva', id_reserva=r.id_reserva) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar</button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted small">&mdash;</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No hay reservas registradas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

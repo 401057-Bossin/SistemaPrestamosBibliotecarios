@@ -3,8 +3,8 @@ from datetime import date
 from models.enum import EstadoEjemplar, Estado
 
 class Sede:
-    def __init__(self,id_sede: str, nombre: str, direccion: str, contacto: str, horarios: str, activa: bool=True):
-        self.id_sede = id_sede
+    def __init__(self, id_sede: str = None, nombre: str = "", direccion: str = "", contacto: str = "", horarios: str = "", activa: bool = True):
+        self._id_sede = id_sede
         self.nombre = nombre
         self.direccion = direccion
         self.contacto = contacto
@@ -14,6 +14,10 @@ class Sede:
     @property
     def id_sede(self):
         return self._id_sede
+    
+    @id_sede.setter
+    def id_sede(self, value):
+        self._id_sede = value
     
     def verificar_sede(self):
         if not self.activa:
@@ -26,7 +30,7 @@ class Sede:
     
 
 class Socio:
-    def __init__(self, id_socio: str, nombre: str, apellido: str, dni: str, email: str):
+    def __init__(self, id_socio: str = None, nombre: str = "", apellido: str = "", dni: str = "", email: str = ""):
         self._id_socio = id_socio
         self.nombre = nombre
         self.apellido = apellido
@@ -37,6 +41,10 @@ class Socio:
     @property
     def id_socio(self):
         return self._id_socio
+
+    @id_socio.setter
+    def id_socio(self, value):
+        self._id_socio = value
     
     @property
     def penalizado_hasta(self):
@@ -57,7 +65,7 @@ class Socio:
     
 #isbn es un identificador único para cada libro(International Standard Book Number).
 class Libro:
-    def __init__(self, isbn: str, titulo: str, autor: str, categoria: str, editorial: str ):
+    def __init__(self, isbn: str = None, titulo: str = "", autor: str = "", categoria: str = "", editorial: str = ""):
         self._isbn = isbn
         self.titulo = titulo
         self.autor = autor
@@ -67,6 +75,10 @@ class Libro:
     @property
     def isbn(self):
         return self._isbn
+
+    @isbn.setter
+    def isbn(self, value):
+        self._isbn = value
     
     def __str__(self):
         return f"Libro: {self.titulo}, Autor: {self.autor}, ISBN: {self.isbn}, Categoría: {self.categoria}, Editorial: {self.editorial}"
@@ -74,7 +86,7 @@ class Libro:
     
     
 class Ejemplar:
-    def __init__(self, id_ejemplar: str, libro: Libro, sede: Sede):
+    def __init__(self, id_ejemplar: str = None, libro: Libro = None, sede: Sede = None):
         self._id_ejemplar = id_ejemplar
         self.libro = libro
         self.sede = sede
@@ -85,9 +97,25 @@ class Ejemplar:
     def id_ejemplar(self):
         return self._id_ejemplar
 
+    @id_ejemplar.setter
+    def id_ejemplar(self, value):
+        self._id_ejemplar = value
+
     @property
     def estado_ejemplar(self):
         return self._estado_ejemplar
+
+    @estado_ejemplar.setter
+    def estado_ejemplar(self, nuevo_estado: EstadoEjemplar):
+        self._estado_ejemplar = nuevo_estado
+
+    @property
+    def estado(self):
+        return self._estado
+
+    @estado.setter
+    def estado(self, nuevo_estado: Estado):
+        self._estado = nuevo_estado
 
     def esta_disponible(self) -> bool:
         return self.estado_ejemplar == EstadoEjemplar.DISPONIBLE

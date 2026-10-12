@@ -245,11 +245,10 @@ def crear_reserva():
 
 @app.route("/reservas/<id_reserva>/cancelar", methods=["POST"])
 def cancelar_reserva(id_reserva):
-    reserva = next((r for r in gestor.reservas if r.id_reserva == id_reserva), None)
-    if reserva:
-        reserva.cancelar()
+    try:
+        gestor.cancelar_reserva(id_reserva)
         flash(f"Reserva '{id_reserva}' cancelada.", "info")
-    else:
+    except BibliotecaExcepcion:
         flash("Reserva no encontrada.", "danger")
     return redirect(url_for("prestamos"))
 

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from models.enum import EstadoEjemplar, Estado
 from models.entidades import Sede, Socio, Libro, Ejemplar
 from models.operaciones import Prestamo, Reserva
@@ -10,19 +10,81 @@ from models.excepciones import (
     SedeDadaDeBajaError,
     TransicionInvalidaError
 )
+from dao import (
+    inicializar_bd,
+    vaciar_bd,
+    DB_PATH_DEFAULT,
+    SedeDAO,
+    SocioDAO,
+    LibroDAO,
+    EjemplarDAO,
+    PrestamoDAO,
+    ReservaDAO,
+    RemitoDAO
+)
 
 
 class GestorBiblioteca:
     _instancia = None
 
-    def __new__(cls):
+    def __new__(cls, db_path: str = DB_PATH_DEFAULT):
         # Patrón Singleton
         if cls._instancia is None:
             cls._instancia = super(GestorBiblioteca, cls).__new__(cls)
-            cls._instancia._inicializar_datos()
+            cls._instancia.db_path = db_path
+            cls._instancia._configurar_daos()
+            cls._instancia._cargar_desde_bd()
         return cls._instancia
 
+    def _configurar_daos(self):
+        inicializar_bd(self.db_path)
+        self.sede_dao = SedeDAO(self.db_path)
+        self.socio_dao = SocioDAO(self.db_path)
+        self.libro_dao = LibroDAO(self.db_path)
+        self.ejemplar_dao = EjemplarDAO(self.db_path)
+        self.prestamo_dao = PrestamoDAO(self.db_path)
+        self.reserva_dao = ReservaDAO(self.db_path)
+        self.remito_dao = RemitoDAO(self.db_path)
+
+    def _cargar_desde_bd(self):
+        sedes_lista = self.sede_dao.listar()
+        self.sedes = {s.id_sede: s for s in sedes_lista}
+
+        socios_lista = self.socio_dao.listar()
+        self.socios = {s.id_socio: s for s in socios_lista}
+
+        libros_lista = self.libro_dao.listar()
+        self.libros = {l.isbn: l for l in libros_lista}
+
+        ejemplares_lista = self.ejemplar_dao.listar(libros_dict=self.libros, sedes_dict=self.sedes)
+        self.ejemplares = {e.id_ejemplar: e for e in ejemplares_lista}
+
+        self.prestamos = self.prestamo_dao.listar(
+            socios_dict=self.socios,
+            ejemplares_dict=self.ejemplares,
+            sedes_dict=self.sedes
+        )
+
+        self.reservas = self.reserva_dao.listar(
+            socios_dict=self.socios,
+            libros_dict=self.libros,
+            sedes_dict=self.sedes
+        )
+
+        self.remitos = self.remito_dao.listar(
+            ejemplares_dict=self.ejemplares,
+            sedes_dict=self.sedes
+        )
+
+    def reiniciar_para_tests(self, db_path: str = "test_biblioteca.db"):
+        """Permite cambiar la base de datos a una de pruebas y resetear el estado."""
+        self.db_path = db_path
+        self._configurar_daos()
+        self._inicializar_datos()
+
     def _inicializar_datos(self):
+        """Reinicia la base de datos y la memoria interna (útil para tests)."""
+        vaciar_bd(self.db_path)
         self.sedes = {}
         self.socios = {}
         self.libros = {}
@@ -110,6 +172,7 @@ class GestorBiblioteca:
             sede.id_sede = self.generar_id_sede()
         if sede.id_sede in self.sedes:
             raise BibliotecaExcepcion(f"La sede con ID '{sede.id_sede}' ya existe.")
+        self.sede_dao.crear(sede)
         self.sedes[sede.id_sede] = sede
         return sede
 
@@ -122,6 +185,7 @@ class GestorBiblioteca:
     def cambiar_estado_sede(self, id_sede: str, activa: bool):
         sede = self.obtener_sede(id_sede)
         sede.activa = activa
+        self.sede_dao.actualizar_estado(id_sede, activa)
 
     # --- 2. Administrar Socios ---
     def agregar_socio(self, socio: Socio) -> Socio:
@@ -131,6 +195,7 @@ class GestorBiblioteca:
             raise BibliotecaExcepcion(f"El socio con ID '{socio.id_socio}' ya existe.")
         if any(s.dni == socio.dni for s in self.socios.values()):
             raise BibliotecaExcepcion(f"Ya existe un socio con DNI '{socio.dni}'.")
+        self.socio_dao.crear(socio)
         self.socios[socio.id_socio] = socio
         return socio
 
@@ -146,6 +211,7 @@ class GestorBiblioteca:
             libro.isbn = self.generar_isbn()
         if libro.isbn in self.libros:
             raise BibliotecaExcepcion(f"El libro con ISBN '{libro.isbn}' ya existe en el catálogo.")
+        self.libro_dao.crear(libro)
         self.libros[libro.isbn] = libro
         return libro
 
@@ -154,6 +220,7 @@ class GestorBiblioteca:
             ejemplar.id_ejemplar = self.generar_id_ejemplar()
         if ejemplar.id_ejemplar in self.ejemplares:
             raise BibliotecaExcepcion(f"El ejemplar '{ejemplar.id_ejemplar}' ya está registrado.")
+        self.ejemplar_dao.crear(ejemplar)
         self.ejemplares[ejemplar.id_ejemplar] = ejemplar
         return ejemplar
 
@@ -191,12 +258,15 @@ class GestorBiblioteca:
             dias_prestamo=dias_prestamo,
             fecha_inicio=fecha_inicio
         )
+        self.prestamo_dao.crear(prestamo)
+        self.ejemplar_dao.actualizar(ejemplar)
         self.prestamos.append(prestamo)
 
         # Si es interbibliotecario, se genera un remito para logística (Trazabilidad)
         if prestamo.es_interbibliotecario:
             id_remito = f"REM-{id_prestamo}"
             remito = Remito(id_remito, ejemplar, sede_origen, sede_destino)
+            self.remito_dao.crear(remito)
             self.remitos.append(remito)
 
         return prestamo
@@ -206,6 +276,10 @@ class GestorBiblioteca:
         if not prestamo:
             raise BibliotecaExcepcion(f"Préstamo '{id_prestamo}' no encontrado.")
         prestamo.registrar_devolucion(fecha_devolucion, estado_fisico)
+        self.prestamo_dao.actualizar_devolucion(id_prestamo, fecha_devolucion, estado_fisico)
+        self.ejemplar_dao.actualizar(prestamo.ejemplar)
+        if prestamo.socio.penalizado_hasta:
+            self.socio_dao.actualizar_penalizacion(prestamo.socio.id_socio, prestamo.socio.penalizado_hasta)
 
     # --- 5. Trazabilidad de Remitos (Patrón State) ---
     def obtener_remito(self, id_remito: str) -> Remito:
@@ -218,17 +292,23 @@ class GestorBiblioteca:
         remito = self.obtener_remito(id_remito)
         remito.empaquetar()
         remito.ejemplar.estado_ejemplar = EstadoEjemplar.EN_PREPARACION
+        self.remito_dao.agregar_trazabilidad(id_remito, "Empaquetado", datetime.now(), "Empaquetado")
+        self.ejemplar_dao.actualizar(remito.ejemplar)
 
     def despachar_remito(self, id_remito: str):
         remito = self.obtener_remito(id_remito)
         remito.despachar()
         remito.ejemplar.estado_ejemplar = EstadoEjemplar.EN_TRANSITO
+        self.remito_dao.agregar_trazabilidad(id_remito, "Despachado", datetime.now(), "Despachado")
+        self.ejemplar_dao.actualizar(remito.ejemplar)
 
     def recibir_remito(self, id_remito: str):
         remito = self.obtener_remito(id_remito)
         remito.recibir()
         remito.ejemplar.sede = remito.sede_destino
         remito.ejemplar.estado_ejemplar = EstadoEjemplar.PRESTADO
+        self.remito_dao.agregar_trazabilidad(id_remito, "Recibido", datetime.now(), "Recibido")
+        self.ejemplar_dao.actualizar(remito.ejemplar)
 
     # --- 6. Consultar Disponibilidad ---
     def consultar_disponibilidad(self, isbn: str, id_sede: str = None):
@@ -248,7 +328,7 @@ class GestorBiblioteca:
         id_sede: str = None,
         id_reserva: str = None
     ) -> Reserva:
-        # Compatibilidad si se llamó positional con id_reserva primero: crear_reserva(id_reserva, id_socio, isbn, id_sede)
+        # Compatibilidad si se llamó positional con id_reserva primero
         if id_socio and id_socio.startswith("RES-"):
             id_reserva, id_socio, isbn, id_sede = id_socio, isbn, id_sede, id_reserva
 
@@ -262,14 +342,22 @@ class GestorBiblioteca:
             raise BibliotecaExcepcion(f"Libro con ISBN '{isbn}' no encontrado.")
         
         reserva = Reserva(id_reserva, socio, libro, sede)
+        self.reserva_dao.crear(reserva)
         self.reservas.append(reserva)
+        return reserva
+
+    def cancelar_reserva(self, id_reserva: str):
+        reserva = next((r for r in self.reservas if r.id_reserva == id_reserva), None)
+        if not reserva:
+            raise BibliotecaExcepcion(f"Reserva '{id_reserva}' no encontrada.")
+        reserva.cancelar()
+        self.reserva_dao.actualizar_activa(id_reserva, False)
         return reserva
 
     # =========================================================================
     # LOS 4 REPORTES OBLIGATORIOS NO TRIVIALES
     # =========================================================================
 
-    # Reporte 1: Préstamos activos y material en tránsito
     def reporte_prestamos_activos_y_transito(self):
         prestamos_activos = [p for p in self.prestamos if p.fecha_devolucion is None]
         ejemplares_en_transito = [
@@ -284,7 +372,6 @@ class GestorBiblioteca:
             "ejemplares_en_transito": ejemplares_en_transito
         }
 
-    # Reporte 2: Préstamos vencidos y días de mora
     def reporte_prestamos_vencidos(self, fecha_referencia: date = None):
         if fecha_referencia is None:
             fecha_referencia = date.today()
@@ -302,7 +389,6 @@ class GestorBiblioteca:
             "detalle": vencidos
         }
 
-    # Reporte 3: Disponibilidad de catálogo por sede
     def reporte_disponibilidad_por_sede(self):
         resumen = {}
         for sede in self.sedes.values():
@@ -318,7 +404,6 @@ class GestorBiblioteca:
             }
         return resumen
 
-    # Reporte 4: Libros más solicitados para préstamos inter-sedes
     def reporte_libros_mas_solicitados_intersedes(self):
         conteo_por_libro = {}
         for p in self.prestamos:

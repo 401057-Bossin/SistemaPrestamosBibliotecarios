@@ -15,7 +15,7 @@ from models.excepciones import (
 def reiniciar_gestor():
     """Reinicia la instancia Singleton antes de cada test para aislar el estado."""
     gestor = GestorBiblioteca()
-    gestor._inicializar_datos()
+    gestor.reiniciar_para_tests("test_biblioteca.db")
     return gestor
 
 

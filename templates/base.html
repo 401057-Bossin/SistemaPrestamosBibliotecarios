@@ -4,129 +4,358 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}BiblioRed - Préstamos Interbibliotecarios{% endblock %}</title>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <style>
         :root {
-            --primary-color: #1e3a8a;
-            --accent-color: #3b82f6;
-            --bg-light: #f8fafc;
+            --canvas-bg: #EAEFEA;
+            --canvas-soft: #F2F5F2;
+            --color-dark: #111513;
+            --color-dark-surface: #181D1A;
+            --color-lime: #D4F73C;
+            --color-lime-hover: #C5E92C;
+            --color-card-white: #FFFFFF;
+            --text-main: #121814;
+            --text-muted: #667468;
+            --border-subtle: rgba(18, 24, 20, 0.07);
+            --border-dark: rgba(255, 255, 255, 0.1);
+            --radius-bento: 26px;
+            --radius-sub: 18px;
+            --radius-pill: 9999px;
+            --shadow-bento: 0 10px 30px -8px rgba(20, 30, 22, 0.05), 0 2px 8px rgba(20, 30, 22, 0.03);
+            --shadow-float: 0 14px 40px -10px rgba(18, 24, 20, 0.09);
         }
+
+        * {
+            box-sizing: border-box;
+            letter-spacing: -0.015em;
+        }
+
         body {
-            background-color: var(--bg-light);
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--canvas-bg);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- Navbar Bento Header --- */
+        .header-wrapper {
+            padding: 1rem 1.5rem 0.5rem;
+        }
+        .bento-navbar {
+            background-color: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 24px -6px rgba(18, 24, 20, 0.06);
+            border-radius: var(--radius-pill);
+            padding: 0.55rem 1.25rem;
+            transition: all 0.25s ease;
         }
         .navbar-brand {
-            font-weight: 700;
-            letter-spacing: -0.5px;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--color-dark) !important;
+            letter-spacing: -0.03em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
+        .brand-dot {
+            width: 10px;
+            height: 10px;
+            background-color: var(--color-lime);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px rgba(212, 247, 60, 0.8);
+        }
+        .nav-link {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-muted) !important;
+            border-radius: var(--radius-pill);
+            padding: 0.45rem 1rem !important;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .nav-link:hover {
+            color: var(--color-dark) !important;
+            background-color: rgba(0, 0, 0, 0.04);
+            transform: translateY(-1px);
+        }
+        .nav-link.active {
+            color: var(--color-dark) !important;
+            background-color: #E2E8E2 !important;
+            font-weight: 700 !important;
+        }
+
+        /* --- Bento Cards General System --- */
         .card {
-            border: none;
-            border-radius: 0.85rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-        .card-stat {
-            border-left: 4px solid var(--accent-color);
-        }
-        .table-responsive {
-            border-radius: 0.75rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-bento);
+            background-color: var(--color-card-white);
+            box-shadow: var(--shadow-bento);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
             overflow: hidden;
         }
-        .badge {
-            font-weight: 500;
-            padding: 0.45em 0.75em;
+        .card:hover {
+            box-shadow: var(--shadow-float);
         }
+        .card-header {
+            background-color: transparent !important;
+            border-bottom: 1px solid var(--border-subtle) !important;
+            padding: 1.25rem 1.5rem !important;
+            font-weight: 700;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* --- Specialized Bento Classes --- */
+        .bento-card-lime {
+            background-color: var(--color-lime) !important;
+            color: var(--color-dark) !important;
+            border: none !important;
+        }
+        .bento-card-dark {
+            background-color: var(--color-dark) !important;
+            color: #FFFFFF !important;
+            border: 1px solid var(--border-dark) !important;
+        }
+        .bento-card-white {
+            background-color: var(--color-card-white) !important;
+            color: var(--text-main) !important;
+        }
+
+        /* --- Buttons System --- */
+        .btn {
+            border-radius: var(--radius-pill) !important;
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 0.55rem 1.25rem;
+            letter-spacing: -0.01em;
+            transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn-primary {
+            background-color: var(--color-dark) !important;
+            border-color: var(--color-dark) !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 4px 12px rgba(18, 22, 20, 0.12);
+        }
+        .btn-primary:hover {
+            background-color: #242B26 !important;
+            border-color: #242B26 !important;
+            transform: translateY(-1px);
+        }
+        .btn-lime {
+            background-color: var(--color-lime) !important;
+            color: var(--color-dark) !important;
+            border: none !important;
+            font-weight: 700 !important;
+        }
+        .btn-lime:hover {
+            background-color: var(--color-lime-hover) !important;
+            color: #000000 !important;
+            transform: translateY(-1px);
+        }
+        .btn-outline-dark {
+            border-color: rgba(18, 24, 20, 0.15) !important;
+            background-color: rgba(255, 255, 255, 0.6) !important;
+            color: var(--color-dark) !important;
+        }
+        .btn-outline-dark:hover {
+            background-color: var(--color-dark) !important;
+            color: #FFFFFF !important;
+            border-color: var(--color-dark) !important;
+        }
+        .btn-pill-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius-pill) !important;
+            padding: 0 !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- Badges & Pills --- */
+        .badge {
+            border-radius: var(--radius-pill) !important;
+            font-weight: 600 !important;
+            padding: 0.4em 0.85em !important;
+            letter-spacing: -0.01em;
+            font-size: 0.75rem;
+        }
+        .badge-lime {
+            background-color: var(--color-lime) !important;
+            color: var(--color-dark) !important;
+        }
+        .badge-dark {
+            background-color: var(--color-dark) !important;
+            color: #FFFFFF !important;
+        }
+        .badge-soft {
+            background-color: rgba(18, 24, 20, 0.06);
+            color: var(--text-main);
+        }
+
+        /* --- Tables Refinement --- */
+        .table-responsive {
+            border-radius: var(--radius-sub);
+        }
+        .table {
+            --bs-table-bg: transparent;
+            margin-bottom: 0;
+            color: var(--text-main);
+        }
+        .table > :not(caption) > * > * {
+            padding: 0.95rem 1rem;
+            border-bottom-color: rgba(18, 24, 20, 0.05);
+            vertical-align: middle;
+        }
+        .table thead th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            border-bottom-width: 1px;
+            border-bottom-color: rgba(18, 24, 20, 0.08);
+            background-color: rgba(18, 24, 20, 0.02) !important;
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(212, 247, 60, 0.08) !important;
+        }
+
+        /* --- Form Inputs Bento Style --- */
+        .form-control, .form-select {
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-subtle);
+            padding: 0.6rem 1.15rem;
+            font-size: 0.9rem;
+            background-color: #FFFFFF;
+            transition: all 0.2s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--color-dark);
+            box-shadow: 0 0 0 3px rgba(18, 24, 20, 0.1);
+        }
+
+        /* --- Footer --- */
         .footer {
             margin-top: auto;
-            border-top: 1px solid #e2e8f0;
-            background: #ffffff;
+            padding: 1.5rem 0;
+            color: var(--text-muted);
+            font-size: 0.825rem;
+            border-top: 1px solid rgba(18, 24, 20, 0.06);
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm" style="background-color: #0f172a !important;">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
-                <i class="bi bi-book-half text-primary fs-4"></i>
-                <span>BiblioRed <span class="badge bg-primary text-white fs-6">DAO</span></span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'index' %}active text-white fw-bold{% endif %}" href="{{ url_for('index') }}">
-                            <i class="bi bi-speedometer2 me-1"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'sedes' %}active text-white fw-bold{% endif %}" href="{{ url_for('sedes') }}">
-                            <i class="bi bi-building me-1"></i> Sedes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'socios' %}active text-white fw-bold{% endif %}" href="{{ url_for('socios') }}">
-                            <i class="bi bi-people me-1"></i> Socios
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'catalogo' %}active text-white fw-bold{% endif %}" href="{{ url_for('catalogo') }}">
-                            <i class="bi bi-journal-text me-1"></i> Catálogo
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'prestamos' %}active text-white fw-bold{% endif %}" href="{{ url_for('prestamos') }}">
-                            <i class="bi bi-arrow-left-right me-1"></i> Préstamos & Reservas
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'remitos' %}active text-white fw-bold{% endif %}" href="{{ url_for('remitos') }}">
-                            <i class="bi bi-truck me-1"></i> Remitos
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'reportes' %}active text-white fw-bold{% endif %}" href="{{ url_for('reportes') }}">
-                            <i class="bi bi-bar-chart-fill me-1"></i> Reportes
-                        </a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center text-light small">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle me-2">
-                        <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> Sistema Operativo
-                    </span>
+    <!-- Top Bento Pill Navigation -->
+    <header class="header-wrapper">
+        <div class="container-fluid max-container px-0">
+            <nav class="navbar navbar-expand-xl bento-navbar">
+                <div class="container-fluid px-1">
+                    <a class="navbar-brand me-4" href="{{ url_for('index') }}">
+                        <span class="brand-dot"></span>
+                        <span>BiblioRed</span>
+                        <span class="badge badge-dark ms-1 py-1 px-2" style="font-size: 0.65rem;">DAO</span>
+                    </a>
+                    
+                    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                        <i class="bi bi-list fs-4"></i>
+                    </button>
+                    
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav me-auto mb-2 mb-xl-0 gap-1">
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
+                                    <i class="bi bi-grid-1x2-fill me-1"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'sedes' %}active{% endif %}" href="{{ url_for('sedes') }}">
+                                    <i class="bi bi-building me-1"></i> Sedes
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'socios' %}active{% endif %}" href="{{ url_for('socios') }}">
+                                    <i class="bi bi-people me-1"></i> Socios
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'catalogo' %}active{% endif %}" href="{{ url_for('catalogo') }}">
+                                    <i class="bi bi-journal-bookmark me-1"></i> Catálogo
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'prestamos' %}active{% endif %}" href="{{ url_for('prestamos') }}">
+                                    <i class="bi bi-arrow-left-right me-1"></i> Préstamos & Reservas
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'remitos' %}active{% endif %}" href="{{ url_for('remitos') }}">
+                                    <i class="bi bi-truck me-1"></i> Remitos
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'reportes' %}active{% endif %}" href="{{ url_for('reportes') }}">
+                                    <i class="bi bi-bar-chart-steps me-1"></i> Reportes
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <div class="d-flex align-items-center gap-2 mt-3 mt-xl-0">
+                            <span class="badge bg-white text-dark border d-flex align-items-center gap-2 py-2 px-3 shadow-sm" style="border-radius: var(--radius-pill) !important;">
+                                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; display: inline-block;"></span>
+                                <span class="fw-semibold" style="font-size: 0.75rem;">Red Activa</span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </nav>
         </div>
-    </nav>
+    </header>
 
     <!-- Main Container -->
-    <main class="container-fluid px-4 py-4">
+    <main class="container-fluid px-3 px-md-4 py-3 flex-grow-1" style="max-width: 1440px;">
         <!-- Flash messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="row">
+                <div class="row mb-3">
                     <div class="col-12">
                         {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                            <div class="alert alert-{{ category }} alert-dismissible fade show border-0 shadow-sm d-flex align-items-center" role="alert" style="border-radius: var(--radius-sub);">
                                 {% if category == 'success' %}
-                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    <i class="bi bi-check-circle-fill me-2 fs-5"></i>
                                 {% elif category == 'danger' %}
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
                                 {% elif category == 'warning' %}
-                                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                                    <i class="bi bi-exclamation-circle-fill me-2 fs-5"></i>
                                 {% else %}
-                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
                                 {% endif %}
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <div class="fw-medium">{{ message }}</div>
+                                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
                             </div>
                         {% endfor %}
                     </div>
@@ -138,9 +367,11 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer py-3 text-center text-muted small">
+    <footer class="footer text-center">
         <div class="container-fluid px-4">
-            <span>Sistema de Préstamos Interbibliotecarios &copy; 2026 - Desarrollo de Aplicaciones con Objetos</span>
+            <span class="fw-medium">BiblioRed &copy; 2026</span>
+            <span class="mx-2">&bull;</span>
+            <span>Sistema de Gestión y Logística Interbibliotecaria</span>
         </div>
     </footer>
 

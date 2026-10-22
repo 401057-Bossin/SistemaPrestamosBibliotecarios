@@ -1,95 +1,547 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - BiblioRed{% endblock %}
+{% block title %}Dashboard Bento - BiblioRed{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<style>
+    /* Estilos Bento específicos del Dashboard */
+    .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1.25rem;
+    }
+
+    /* Card 1: Lime Hero Card */
+    .card-hero-lime {
+        grid-column: span 12;
+        background-color: var(--color-lime);
+        color: #111512;
+        border-radius: var(--radius-bento);
+        padding: 1.75rem;
+        position: relative;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 12px 36px -10px rgba(180, 220, 40, 0.35);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    @media (min-width: 992px) {
+        .card-hero-lime {
+            grid-column: span 6;
+            min-height: 310px;
+        }
+    }
+
+    /* Card 2: Schedule & Activity Bento */
+    .card-calendar-bento {
+        grid-column: span 12;
+        background-color: #FFFFFF;
+        border-radius: var(--radius-bento);
+        padding: 1.75rem;
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-bento);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    @media (min-width: 992px) {
+        .card-calendar-bento {
+            grid-column: span 6;
+            min-height: 310px;
+        }
+    }
+
+    /* Card 3: Roadmap & Stats */
+    .card-roadmap {
+        grid-column: span 12;
+        background-color: #FFFFFF;
+        border-radius: var(--radius-bento);
+        padding: 1.75rem;
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-bento);
+    }
+
+    @media (min-width: 992px) {
+        .card-roadmap {
+            grid-column: span 7;
+        }
+    }
+
+    /* Sub-Bento Mini Cards */
+    .sub-bento-container {
+        grid-column: span 12;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+
+    @media (min-width: 992px) {
+        .sub-bento-container {
+            grid-column: span 5;
+        }
+    }
+
+    /* Dark Efficiency Card */
+    .card-dark-chart {
+        background-color: var(--color-dark);
+        color: #FFFFFF;
+        border-radius: var(--radius-bento);
+        padding: 1.4rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Soft White Metric Card */
+    .card-soft-metric {
+        background-color: #FFFFFF;
+        border-radius: var(--radius-bento);
+        padding: 1.4rem;
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-bento);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    /* AI / Smart Assistant Bento */
+    .card-assistant-bento {
+        background: linear-gradient(135deg, #FFFFFF 65%, #F4FDE2 100%);
+        border-radius: var(--radius-bento);
+        padding: 1.4rem;
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-bento);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    /* Stage pill track (Trazabilidad y Logística) */
+    .stage-pill {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0.85rem 0.6rem;
+        border-radius: 20px;
+        background-color: #F4F6F4;
+        flex: 1;
+        min-width: 60px;
+        color: var(--text-muted);
+        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        border: 1px solid rgba(18, 24, 20, 0.04);
+        text-align: center;
+    }
+
+    .stage-pill:hover {
+        transform: translateY(-2px);
+        background-color: #ECEFEC;
+    }
+
+    .stage-pill.active {
+        background-color: var(--color-lime);
+        color: var(--color-dark);
+        box-shadow: 0 6px 20px -4px rgba(212, 247, 60, 0.5);
+        border-color: rgba(0, 0, 0, 0.04);
+        transform: translateY(-2px);
+    }
+
+    .stage-pill .stage-icon {
+        font-size: 1.15rem;
+        line-height: 1;
+        margin-bottom: 0.35rem;
+    }
+
+    .stage-pill .stage-count {
+        font-size: 1.2rem;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.03em;
+    }
+
+    .stage-pill .stage-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        margin-top: 0.3rem;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+    }
+
+    /* Custom progress track */
+    .custom-progress-track {
+        height: 7px;
+        background-color: rgba(18, 22, 20, 0.12);
+        border-radius: var(--radius-pill);
+        overflow: hidden;
+    }
+
+    .custom-progress-bar {
+        height: 100%;
+        background-color: var(--color-dark);
+        border-radius: var(--radius-pill);
+    }
+
+    /* Micro avatar circle */
+    .avatar-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--color-dark);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Action pill round button */
+    .btn-circle-action {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background-color: var(--color-dark);
+        color: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+        text-decoration: none;
+    }
+
+    .btn-circle-action:hover {
+        background-color: #262D28;
+        transform: scale(1.05);
+        color: #FFFFFF;
+    }
+
+    /* Pill Dropdown / Selector */
+    .pill-select-box {
+        background-color: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: var(--radius-pill);
+        padding: 0.5rem 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-dark);
+        text-decoration: none;
+    }
+
+    .pill-select-box:hover {
+        background-color: #FFFFFF;
+        color: var(--color-dark);
+    }
+</style>
+
+<!-- Header & Quick Jump -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <div>
-        <h2 class="fw-bold mb-1">Panel de Control General</h2>
-        <p class="text-muted mb-0">Gestión integral de la red de bibliotecas, ejemplares y logística de préstamos.</p>
+        <h2 class="fw-bolder mb-1" style="letter-spacing: -0.03em; font-size: 1.85rem;">Panel de Control</h2>
+        <p class="text-muted mb-0 small fw-medium">Gestión integral de red, ejemplares y trazabilidad logística.</p>
     </div>
     <div class="d-flex gap-2">
         <a href="{{ url_for('prestamos') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-1"></i> Nuevo Préstamo
+            <i class="bi bi-plus-lg"></i> Nuevo Préstamo
         </a>
         <a href="{{ url_for('remitos') }}" class="btn btn-outline-dark">
-            <i class="bi bi-truck me-1"></i> Trazabilidad Remitos
+            <i class="bi bi-truck"></i> Trazabilidad Remitos
         </a>
     </div>
 </div>
 
-<!-- Tarjetas de métricas -->
-<div class="row g-3 mb-4">
-    <div class="col-md-6 col-lg-3">
-        <div class="card p-3 card-stat shadow-sm h-100">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-muted text-uppercase fw-semibold small">Sedes Registradas</span>
-                    <h3 class="fw-bold my-1 text-dark">{{ total_sedes }}</h3>
-                    <span class="text-success small fw-medium"><i class="bi bi-check-circle"></i> Red activa</span>
+<!-- ================= BENTO GRID PRINCIPAL ================= -->
+<div class="bento-grid mb-4">
+
+    <!-- 1. HERO LIME BENTO CARD (Estilo Exacto al Mockup) -->
+    <div class="card-hero-lime">
+        <!-- Top row: Avatar & Action Icons -->
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <div class="avatar-circle">
+                    <i class="bi bi-person-fill text-dark"></i>
                 </div>
-                <div class="bg-primary-subtle p-3 rounded-circle text-primary">
-                    <i class="bi bi-building fs-3"></i>
+                <div>
+                    <div class="fw-bold" style="font-size: 0.9rem; line-height: 1.1;">Gestor Central</div>
+                    <div style="font-size: 0.75rem; opacity: 0.75;">Administrador de Red</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('reportes') }}" class="avatar-circle text-decoration-none"
+                    title="Reportes y Notificaciones">
+                    <i class="bi bi-bell-fill" style="font-size: 0.9rem;"></i>
+                </a>
+                <a href="{{ url_for('sedes') }}" class="avatar-circle text-decoration-none"
+                    title="Información de Sedes">
+                    <i class="bi bi-info-circle-fill" style="font-size: 0.9rem;"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Middle: Big Title & Metric -->
+        <div class="my-4">
+            <h1 class="fw-bolder mb-1" style="letter-spacing: -0.04em; font-size: 2.3rem;">BibliotecaDAO</h1>
+            <div class="fw-medium mb-3" style="font-size: 0.85rem; opacity: 0.8;">Red de Bibliotecas
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2 small fw-bold">
+                <span>Capacidad de préstamos activos</span>
+                <span>{{ total_prestamos_activos }} en curso</span>
+            </div>
+            <div class="custom-progress-track">
+                <div class="custom-progress-bar"
+                    style="width: {% if total_ejemplares > 0 %}{{ (total_prestamos_activos / total_ejemplares * 100)|round|int }}%{% else %}15%{% endif %}; min-width: 18%;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom row: Quick Selector Pill + Send Action -->
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('catalogo') }}" class="pill-select-box">
+                <i class="bi bi-journal-album"></i>
+                <span>Explorar Catálogo General</span>
+                <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem;"></i>
+            </a>
+            <a href="{{ url_for('prestamos') }}" class="btn-circle-action" title="Ir a Préstamos">
+                <i class="bi bi-arrow-up-right fs-5"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. TRAZABILIDAD & LOGÍSTICA DE REMITOS (Bento Pipeline) -->
+    <div class="card-calendar-bento">
+        <!-- Conteo dinámico de remitos por estado del Patrón State -->
+        {% set ns = namespace(creados=0, empaquetados=0, despachados=0, recibidos=0) %}
+        {% for r in remitos_en_proceso %}
+        {% if r.estado_actual.__class__.__name__ == 'Creado' %}{% set ns.creados = ns.creados + 1 %}{% endif %}
+        {% if r.estado_actual.__class__.__name__ == 'Empaquetado' %}{% set ns.empaquetados = ns.empaquetados + 1 %}{%
+        endif %}
+        {% if r.estado_actual.__class__.__name__ == 'Despachado' %}{% set ns.despachados = ns.despachados + 1 %}{% endif
+        %}
+        {% if r.estado_actual.__class__.__name__ == 'Recibido' %}{% set ns.recibidos = ns.recibidos + 1 %}{% endif %}
+        {% endfor %}
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h3 class="fw-bolder mb-1" style="letter-spacing: -0.03em;">Trazabilidad Logística</h3>
+                <div class="text-muted small fw-medium d-flex align-items-center gap-1">
+                    <i class="bi bi-diagram-3-fill text-dark"></i>
+                    <span>Pipeline de custodia &bull; Red Interbibliotecaria</span>
+                </div>
+            </div>
+            <div>
+                <a href="{{ url_for('remitos') }}" class="pill-select-box text-decoration-none py-1 px-3"
+                    style="font-size: 0.8rem;">
+                    <span>Gestionar</span>
+                    <i class="bi bi-arrow-right small ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Stages Pipeline Capsules (reemplazo estético y funcional sin días fijos) -->
+        <div class="d-flex justify-content-between align-items-stretch gap-2 my-3">
+            <!-- 1. Creado -->
+            <div class="stage-pill {% if ns.creados > 0 and ns.despachados == 0 %}active{% endif %}">
+                <i class="bi bi-file-earmark-plus stage-icon"></i>
+                <span class="stage-count">{{ ns.creados }}</span>
+                <span class="stage-label">Creados</span>
+            </div>
+
+            <!-- 2. Empaquetado -->
+            <div class="stage-pill">
+                <i class="bi bi-box-seam stage-icon"></i>
+                <span class="stage-count">{{ ns.empaquetados }}</span>
+                <span class="stage-label">En Sede</span>
+            </div>
+
+            <!-- 3. Despachado (En Tránsito) - Signature Lime Pill -->
+            <div class="stage-pill active">
+                <i class="bi bi-truck stage-icon"></i>
+                <span class="stage-count">{{ ns.despachados }}</span>
+                <span class="stage-label">En Tránsito</span>
+            </div>
+
+            <!-- 4. Recibido -->
+            <div class="stage-pill">
+                <i class="bi bi-check2-circle stage-icon"></i>
+                <span class="stage-count">{% if total_remitos > remitos_en_proceso|length %}{{ total_remitos -
+                    remitos_en_proceso|length }}{% else %}0{% endif %}</span>
+                <span class="stage-label">Entregados</span>
+            </div>
+        </div>
+
+        <!-- Activity status & mini indicator slider -->
+        <div>
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                <div class="small fw-semibold text-muted d-flex align-items-center gap-2">
+                    <span
+                        class="badge {% if remitos_en_proceso %}badge-lime text-dark{% else %}bg-light text-dark border{% endif %}">
+                        {{ remitos_en_proceso|length }} en proceso
+                    </span>
+                    <span>Trazabilidad y custodia de ejemplares</span>
+                </div>
+                <!-- Minimal slider indicator dots -->
+                <div class="d-flex gap-1 align-items-center">
+                    <span style="width: 5px; height: 5px; border-radius: 50%; background-color: #D1D5DB;"></span>
+                    <span
+                        style="width: 7px; height: 7px; border-radius: 50%; background-color: var(--color-dark);"></span>
+                    <span style="width: 5px; height: 5px; border-radius: 50%; background-color: #D1D5DB;"></span>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card p-3 card-stat shadow-sm h-100" style="border-left-color: #10b981;">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-muted text-uppercase fw-semibold small">Socios Activos</span>
-                    <h3 class="fw-bold my-1 text-dark">{{ total_socios }}</h3>
-                    <span class="text-muted small">Usuarios de la red</span>
+
+    <!-- 3. PROJECT ROADMAP / FLUJO INTERBIBLIOTECARIO (Tarjeta estilo Bento Roadmap) -->
+    <div class="card-roadmap">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="fw-bolder mb-1" style="letter-spacing: -0.03em;">Circulación de Ejemplares</h4>
+                <div class="text-muted small">Estado de los trayectos activos y solicitudes</div>
+            </div>
+            <a href="{{ url_for('prestamos') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus"></i> Nueva Reserva
+            </a>
+        </div>
+
+        <!-- Timeline track representation -->
+        <div class="p-3 rounded-4 bg-light border mb-3">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge badge-dark">Sede Origen</span>
+                    <i class="bi bi-arrow-right text-muted"></i>
+                    <span class="badge badge-lime">En Tránsito (Remito)</span>
+                    <i class="bi bi-arrow-right text-muted"></i>
+                    <span class="badge bg-white text-dark border">Sede Destino</span>
                 </div>
-                <div class="bg-success-subtle p-3 rounded-circle text-success">
-                    <i class="bi bi-people fs-3"></i>
+                <span class="badge bg-white text-muted border small">Trazabilidad DAO</span>
+            </div>
+            <!-- Progress bar -->
+            <div class="progress" style="height: 10px; border-radius: var(--radius-pill); background-color: #E5E7EB;">
+                <div class="progress-bar"
+                    style="width: 65%; background-color: var(--color-lime); border-radius: var(--radius-pill);"
+                    role="progressbar"></div>
+            </div>
+        </div>
+
+        <!-- Metric badges footer inside card -->
+        <div class="row g-2 text-center">
+            <div class="col-4">
+                <div class="p-2 rounded-3 bg-light">
+                    <div class="text-muted small fw-semibold">Sedes</div>
+                    <div class="fw-bold fs-5 text-dark">{{ total_sedes }}</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="p-2 rounded-3 bg-light">
+                    <div class="text-muted small fw-semibold">Socios</div>
+                    <div class="fw-bold fs-5 text-dark">{{ total_socios }}</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="p-2 rounded-3 bg-light">
+                    <div class="text-muted small fw-semibold">Títulos</div>
+                    <div class="fw-bold fs-5 text-dark">{{ total_libros }}</div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card p-3 card-stat shadow-sm h-100" style="border-left-color: #f59e0b;">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-muted text-uppercase fw-semibold small">Ejemplares Físicos</span>
-                    <h3 class="fw-bold my-1 text-dark">{{ total_ejemplares }}</h3>
-                    <span class="text-muted small">{{ total_libros }} títulos en catálogo</span>
+
+    <!-- 4. SUB-BENTO RIGHT COLUMN (4 mini tarjetas táctiles) -->
+    <div class="sub-bento-container">
+
+        <!-- Mini Card A: Date Badge Pill (Exacto al mockup: 19 Tue, January) -->
+        <div class="card-soft-metric">
+            <div class="d-flex align-items-center gap-3">
+                <div
+                    style="width: 44px; height: 44px; border-radius: 50%; background-color: var(--color-dark); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.15rem;">
+                    {{ total_prestamos_activos }}
                 </div>
-                <div class="bg-warning-subtle p-3 rounded-circle text-warning">
-                    <i class="bi bi-journal-bookmark fs-3"></i>
+                <div>
+                    <div class="fw-bold" style="font-size: 0.95rem; line-height: 1.1;">Préstamos</div>
+                    <div class="text-muted small">En circulación</div>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card p-3 card-stat shadow-sm h-100" style="border-left-color: #ef4444;">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-muted text-uppercase fw-semibold small">Préstamos Activos</span>
-                    <h3 class="fw-bold my-1 text-dark">{{ total_prestamos_activos }}</h3>
-                    <span class="text-danger small fw-medium"><i class="bi bi-clock-history"></i> {{ total_remitos }} remitos logísticos</span>
-                </div>
-                <div class="bg-danger-subtle p-3 rounded-circle text-danger">
-                    <i class="bi bi-arrow-left-right fs-3"></i>
-                </div>
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center text-muted small">
+                <span>Vigentes hoy</span>
+                <i class="bi bi-check2 text-success fw-bold"></i>
             </div>
         </div>
+
+        <!-- Mini Card B: Total Physical Books (Exacto al mockup: 645 h) -->
+        <div class="card-soft-metric" style="background-color: #555E57; color: #FFFFFF; border: none;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="d-flex align-items-center gap-2" style="opacity: 0.8; font-size: 0.8rem;">
+                    <i class="bi bi-journal-bookmark"></i>
+                    <span>Total Ejemplares</span>
+                </div>
+            </div>
+            <div class="my-2">
+                <div class="fw-bolder" style="font-size: 2.2rem; letter-spacing: -0.04em; line-height: 1;">
+                    {{ total_ejemplares }} <span
+                        style="font-size: 1rem; font-weight: 500; opacity: 0.7;">unidades</span>
+                </div>
+            </div>
+            <div class="small" style="opacity: 0.75;">
+                {{ total_libros }} títulos catalogados
+            </div>
+        </div>
+
+        <!-- Mini Card C: Sistemas de Logística (Ancho completo) -->
+        <div class="card-assistant-bento" style="grid-column: span 2;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-circle" style="background-color: var(--color-lime); width: 44px; height: 44px;">
+                        <i class="bi bi-truck text-dark fs-5"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bolder" style="font-size: 1.05rem; line-height: 1.2;">Sistemas de Logística</div>
+                        <div class="text-muted small">Trazabilidad y control de remitos</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('remitos') }}" class="btn btn-dark px-3 py-2"
+                    style="font-size: 0.85rem;">
+                    <span>Ver Remitos</span>
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
     </div>
+
 </div>
 
-<div class="row g-4">
-    <!-- Préstamos recientes -->
+<!-- ================= SECCIÓN INFERIOR: TABLA Y DETALLE ================= -->
+<div class="row g-4 mb-4">
+    <!-- Tabla de Últimos Préstamos -->
     <div class="col-lg-8">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-0">
-                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-check text-primary me-2"></i>Últimos Préstamos Registrados</h5>
-                <a href="{{ url_for('prestamos') }}" class="btn btn-sm btn-link text-decoration-none">Ver todos</a>
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span
+                        style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--color-lime);"></span>
+                    <h5 class="fw-bolder mb-0 text-dark">Últimos Préstamos Registrados</h5>
+                </div>
+                <a href="{{ url_for('prestamos') }}" class="btn btn-sm btn-outline-dark">
+                    <span>Ver todos</span> <i class="bi bi-arrow-right small"></i>
+                </a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Socio</th>
@@ -102,42 +554,48 @@
                         <tbody>
                             {% for p in ultimos_prestamos %}
                             <tr>
-                                <td class="fw-bold text-secondary">{{ p.id_prestamo }}</td>
+                                <td class="fw-bold text-muted small">#{{ p.id_prestamo }}</td>
                                 <td>
-                                    <div class="fw-medium">{{ p.socio.nombre }} {{ p.socio.apellido }}</div>
-                                    <div class="text-muted small">DNI: {{ p.socio.dni }}</div>
+                                    <div class="fw-bold text-dark">{{ p.socio.nombre }} {{ p.socio.apellido }}</div>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">DNI: {{ p.socio.dni }}
+                                    </div>
                                 </td>
                                 <td>
-                                    <div class="fw-medium">{{ p.ejemplar.libro.titulo }}</div>
-                                    <span class="badge bg-light text-dark border">{{ p.ejemplar.id_ejemplar }}</span>
+                                    <div class="fw-semibold text-dark">{{ p.ejemplar.libro.titulo }}</div>
+                                    <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">{{
+                                        p.ejemplar.id_ejemplar }}</span>
                                 </td>
                                 <td>
                                     {% if p.es_interbibliotecario %}
-                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
-                                            <i class="bi bi-arrow-right"></i> {{ p.sede_origen.nombre }} &rarr; {{ p.sede_destino.nombre }}
-                                        </span>
+                                    <span class="badge badge-lime text-dark">
+                                        <i class="bi bi-arrow-right"></i> {{ p.sede_origen.nombre }} &rarr; {{
+                                        p.sede_destino.nombre }}
+                                    </span>
                                     {% else %}
-                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
-                                            Local ({{ p.sede_origen.nombre }})
-                                        </span>
+                                    <span class="badge bg-light text-dark border">
+                                        Local ({{ p.sede_origen.nombre }})
+                                    </span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <span class="text-dark small">{{ p.fecha_vencimiento }}</span>
+                                    <span class="text-dark small fw-medium">{{ p.fecha_vencimiento }}</span>
                                 </td>
                                 <td>
                                     {% if p.fecha_devolucion %}
-                                        <span class="badge bg-success">Devuelto</span>
+                                    <span class="badge bg-success text-white">Devuelto</span>
                                     {% elif p.esta_vencido() %}
-                                        <span class="badge bg-danger">Vencido</span>
+                                    <span class="badge bg-danger text-white">Vencido</span>
                                     {% else %}
-                                        <span class="badge bg-primary">En curso</span>
+                                    <span class="badge badge-dark">En curso</span>
                                     {% endif %}
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">No hay préstamos registrados aún.</td>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                                    No hay préstamos registrados en el sistema.
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -147,53 +605,75 @@
         </div>
     </div>
 
-    <!-- Panel de accesos directos y Remitos Activos -->
+    <!-- Panel Lateral: Remitos en Tránsito & Accesos Rápidos -->
     <div class="col-lg-4">
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-white py-3 border-0">
-                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-truck text-warning me-2"></i>Logística en Tránsito</h5>
+        <!-- Remitos en tránsito -->
+        <div class="card mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bolder mb-0 text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-truck text-dark"></i>
+                    <span>Logística en Tránsito</span>
+                </h5>
+                <span class="badge badge-lime">{{ remitos_en_proceso|length }}</span>
             </div>
             <div class="card-body">
                 {% if remitos_en_proceso %}
-                    <ul class="list-group list-group-flush">
-                        {% for r in remitos_en_proceso %}
-                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="fw-bold">{{ r.id_remito }}</div>
-                                <div class="small text-muted">{{ r.sede_origen.nombre }} &rarr; {{ r.sede_destino.nombre }}</div>
-                            </div>
-                            <span class="badge bg-info text-dark">{{ r.estado_actual }}</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    <div class="mt-3">
-                        <a href="{{ url_for('remitos') }}" class="btn btn-sm btn-outline-primary w-100">Gestionar despachos</a>
+                <div class="d-flex flex-column gap-2">
+                    {% for r in remitos_en_proceso %}
+                    <div class="p-3 rounded-4 bg-light border d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold text-dark">{{ r.id_remito }}</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">{{ r.sede_origen.nombre }} &rarr;
+                                {{ r.sede_destino.nombre }}</div>
+                        </div>
+                        <span class="badge badge-dark">{{ r.estado_actual }}</span>
                     </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('remitos') }}" class="btn btn-outline-dark w-100 btn-sm">Gestionar despachos</a>
+                </div>
                 {% else %}
-                    <div class="text-center py-3 text-muted">
-                        <i class="bi bi-check2-circle fs-3 text-success d-block mb-1"></i>
-                        No hay remitos en tránsito actualmente.
-                    </div>
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-check2-circle fs-2 text-success d-block mb-2"></i>
+                    <span class="small fw-medium">No hay remitos en tránsito en este momento.</span>
+                </div>
                 {% endif %}
             </div>
         </div>
 
-        <div class="card shadow-sm">
-            <div class="card-header bg-white py-3 border-0">
-                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-lightning-charge text-primary me-2"></i>Acciones Rápidas</h5>
+        <!-- Acciones Rápidas Bento -->
+        <div class="card">
+            <div class="card-header py-3">
+                <h5 class="fw-bolder mb-0 text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-lightning-charge-fill text-dark"></i>
+                    <span>Acciones Frecuentes</span>
+                </h5>
             </div>
             <div class="card-body d-flex flex-column gap-2">
-                <a href="{{ url_for('catalogo') }}" class="btn btn-outline-secondary text-start d-flex justify-content-between align-items-center py-2">
-                    <span><i class="bi bi-search me-2 text-primary"></i> Consultar Disponibilidad</span>
-                    <i class="bi bi-chevron-right small"></i>
+                <a href="{{ url_for('catalogo') }}"
+                    class="btn btn-outline-dark text-start d-flex justify-content-between align-items-center py-2 px-3">
+                    <span class="d-flex align-items-center gap-2">
+                        <i class="bi bi-search text-dark"></i>
+                        <span>Consultar Disponibilidad</span>
+                    </span>
+                    <i class="bi bi-chevron-right small opacity-50"></i>
                 </a>
-                <a href="{{ url_for('socios') }}" class="btn btn-outline-secondary text-start d-flex justify-content-between align-items-center py-2">
-                    <span><i class="bi bi-person-plus me-2 text-success"></i> Alta de Nuevo Socio</span>
-                    <i class="bi bi-chevron-right small"></i>
+                <a href="{{ url_for('socios') }}"
+                    class="btn btn-outline-dark text-start d-flex justify-content-between align-items-center py-2 px-3">
+                    <span class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-plus text-dark"></i>
+                        <span>Alta de Nuevo Socio</span>
+                    </span>
+                    <i class="bi bi-chevron-right small opacity-50"></i>
                 </a>
-                <a href="{{ url_for('reportes') }}" class="btn btn-outline-secondary text-start d-flex justify-content-between align-items-center py-2">
-                    <span><i class="bi bi-file-earmark-bar-graph me-2 text-danger"></i> Ver Reportes No Triviales</span>
-                    <i class="bi bi-chevron-right small"></i>
+                <a href="{{ url_for('reportes') }}"
+                    class="btn btn-outline-dark text-start d-flex justify-content-between align-items-center py-2 px-3">
+                    <span class="d-flex align-items-center gap-2">
+                        <i class="bi bi-bar-chart text-dark"></i>
+                        <span>Reportes y Estadísticas</span>
+                    </span>
+                    <i class="bi bi-chevron-right small opacity-50"></i>
                 </a>
             </div>
         </div>
